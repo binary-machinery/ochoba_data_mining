@@ -36,19 +36,20 @@ class GetPosts:
 
     def get_posts(self):
         print("Started at " + datetime.now().strftime("%H:%M:%S"))
-        for user_id in range(141749, 141750):
+        for user_id in range(1, 150000):
+            if self.stats.request_count % 100 == 0:
+                self.conn.commit()
+                print("{0}: {1} requests processed ({2} posts, {3} errors)"
+                      .format(datetime.now().strftime("%H:%M:%S"),
+                              self.stats.request_count,
+                              self.stats.post_count,
+                              self.stats.error_count))
+
             self.__get_post(user_id)
-            self.conn.commit()
+
+        self.conn.commit()
 
     def __get_post(self, post_id):
-        if self.stats.request_count % 100 == 0:
-            self.conn.commit()
-            print("{0}: {1} requests processed ({2} posts, {3} errors)"
-                  .format(datetime.now().strftime("%H:%M:%S"),
-                          self.stats.request_count,
-                          self.stats.post_count,
-                          self.stats.error_count))
-
         response = requests.get(self.api_post_url + str(post_id), headers=self.api_headers)
         if response.status_code == 429:
             # Too Many Requests
@@ -67,10 +68,10 @@ class GetPosts:
         if "error" in response_json:
             self.cursor.execute(
                 """
-                    insert into post_errors (post_id, response)
-                        values (%s, %s);
+                    insert into post_errors (post_id, status_code, response)
+                        values (%s, %s, %s);
                 """,
-                (post_id, str(response_json))
+                (post_id, response.status_code, json.dumps(response_json))
             )
             self.stats.error_count += 1
 

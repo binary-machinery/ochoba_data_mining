@@ -3,9 +3,10 @@ create table users (
     json varchar not null
 );
 
-create table errors (
+create table user_errors (
     id serial primary key,
     user_id int not null,
+    status_code int not null,
     response varchar not null
 );
 
@@ -19,5 +20,6 @@ create table posts (
 create table post_errors (
     id serial primary key,
     post_id int not null,
+    status_code int not null,
     response varchar not null
 );

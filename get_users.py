@@ -37,18 +37,19 @@ class GetUsers:
     def get_users(self):
         print("Started at " + datetime.now().strftime("%H:%M:%S"))
         for user_id in range(1, 250000):
+            if self.stats.request_count % 100 == 0:
+                self.conn.commit()
+                print("{0}: {1} requests processed ({2} users, {3} errors)"
+                      .format(datetime.now().strftime("%H:%M:%S"),
+                              self.stats.request_count,
+                              self.stats.user_count,
+                              self.stats.error_count))
+
             self.__get_user(user_id)
-            self.conn.commit()
+
+        self.conn.commit()
 
     def __get_user(self, user_id):
-        if self.stats.request_count % 100 == 0:
-            self.conn.commit()
-            print("{0}: {1} requests processed ({2} users, {3} errors)"
-                  .format(datetime.now().strftime("%H:%M:%S"),
-                          self.stats.request_count,
-                          self.stats.user_count,
-                          self.stats.error_count))
-
         response = requests.get(self.api_user_url + str(user_id), headers=self.api_headers)
         if response.status_code == 429:
             # Too Many Requests
@@ -67,10 +68,10 @@ class GetUsers:
         if "error" in response_json:
             self.cursor.execute(
                 """
-                    insert into errors (user_id, response)
-                        values (%s, %s);
+                    insert into user_errors (user_id, status_code, response)
+                        values (%s, %s, %s);
                 """,
-                (user_id, str(response_json))
+                (user_id, response.status_code, json.dumps(response_json))
             )
             self.stats.error_count += 1
 
@@ -82,7 +83,7 @@ class GetUsers:
                     on conflict (id)
                         do update set json = excluded.json;
                 """,
-                (user_id, str(response_json))
+                (user_id, json.dumps(response_json))
             )
             self.stats.user_count += 1
 
