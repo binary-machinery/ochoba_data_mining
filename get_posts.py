@@ -85,7 +85,7 @@ class GetPosts:
                 for block in result["blocks"]:
                     if block["type"] in ["media", "video"]:
                         media_count += 1
-                    elif block["type"] in ["text", "header"]:
+                    elif block["type"] in ["text", "header", "incut", "quote"]:
                         text_length += len(block["data"]["text"])
                 del result["blocks"]
 
