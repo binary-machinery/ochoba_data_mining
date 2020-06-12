@@ -1,6 +1,8 @@
 import json
 import pathlib
+import re
 import time
+import urllib.parse
 from datetime import datetime
 
 import psycopg2
@@ -28,6 +30,9 @@ class GetPosts:
                                      user=config["db"]["user"],
                                      password=config["db"]["password"])
         self.cursor = self.conn.cursor()
+
+        self.tag_regex = re.compile(config["api"]["tag_regex"])
+
         self.stats = self.Stats()
 
     def __del__(self):
@@ -77,7 +82,19 @@ class GetPosts:
 
         else:
             result = response_json["result"]
-            result.pop("entryContent", None)  # drop raw html content
+            if "entryContent" in result:
+                search_index = 0
+                parsed_tags = []
+                while True:
+                    match = self.tag_regex.search(result["entryContent"]["html"], search_index)
+                    if match is None:
+                        break
+
+                    parsed_tags.append(urllib.parse.unquote(match.group(1)))
+                    search_index = match.end(1)
+
+                result["parsed_tags"] = parsed_tags
+                del result["entryContent"]
 
             text_length = 0
             media_count = 0
