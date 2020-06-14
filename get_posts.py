@@ -41,7 +41,7 @@ class GetPosts:
 
     def get_posts(self):
         print("Started at " + datetime.now().strftime("%H:%M:%S"))
-        for post_id in range(1, 148000):
+        for post_id in range(1, 154000):
             if self.stats.request_count % 100 == 0:
                 self.conn.commit()
                 print("{0}: {1} requests processed ({2} posts, {3} errors)"
