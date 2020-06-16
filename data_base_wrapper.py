@@ -19,3 +19,10 @@ class DataBaseWrapper:
 
     def execute_insert(self, query, values):
         self.cursor.execute(query, values)
+
+    def execute_select(self, query, values):
+        self.cursor.execute(query, values)
+        return self.cursor.fetchall()
+
+    def execute_update(self, query, values):
+        self.cursor.execute(query, values)
