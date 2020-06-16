@@ -1,15 +1,12 @@
 import json
-import pathlib
 
-from data_base_wrapper import DataBaseWrapper
+from src.common.config_loader import ConfigLoader
+from src.common.data_base_wrapper import DataBaseWrapper
 
 
 class ParseUserData:
     def __init__(self):
-        script_path = pathlib.Path(__file__).parent.absolute()
-        with open(str(script_path) + "/config.json") as json_file:
-            config = json.load(json_file)
-
+        config = ConfigLoader.load()
         self.db = DataBaseWrapper(config["db"])
 
     def parse(self):
@@ -25,7 +22,6 @@ class ParseUserData:
                 """,
                 (page_size, page_size * page)
             )
-            page += 1
             if len(result) == 0:
                 break
 
@@ -35,7 +31,7 @@ class ParseUserData:
                     """
                         update users
                             set
-                                created = %s,
+                                created = to_timestamp(%s),
                                 name = %s,
                                 type = %s,
                                 karma = %s,
@@ -46,7 +42,7 @@ class ParseUserData:
                                 comments_count = %s,
                                 favorites_count = %s,
                                 subscribers_count = %s
-                            where id = 1
+                            where id = %s
                     """,
                     (user_data["created"], user_data["name"], user_data["type"], user_data["karma"],
                      user_data["is_plus"], user_data["is_verified"], user_data["isAvailableForMessenger"],
@@ -54,6 +50,9 @@ class ParseUserData:
                      user_data["counters"]["favorites"], user_data["subscribers_count"],
                      user_data["id"])
                 )
+
+            page += 1
+            self.db.commit()
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 import json
-import pathlib
 import time
 from datetime import datetime
 
-from data_base_wrapper import DataBaseWrapper
-from ochoba_api_wrapper import OchobaApiWrapper
+from src.common.config_loader import ConfigLoader
+from src.common.data_base_wrapper import DataBaseWrapper
+from src.common.ochoba_api_wrapper import OchobaApiWrapper
 
 
 class GetUsers:
@@ -16,10 +16,7 @@ class GetUsers:
             self.requests_since_last_429 = 0
 
     def __init__(self):
-        script_path = pathlib.Path(__file__).parent.absolute()
-        with open(str(script_path) + "/config.json") as json_file:
-            config = json.load(json_file)
-
+        config = ConfigLoader.load()
         self.api = OchobaApiWrapper(config["api"])
         self.db = DataBaseWrapper(config["db"])
         self.stats = self.Stats()
