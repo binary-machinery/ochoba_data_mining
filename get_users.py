@@ -3,9 +3,7 @@ import pathlib
 import time
 from datetime import datetime
 
-import psycopg2
-import requests
-
+from data_base_wrapper import DataBaseWrapper
 from ochoba_api_wrapper import OchobaApiWrapper
 
 
@@ -23,23 +21,14 @@ class GetUsers:
             config = json.load(json_file)
 
         self.api = OchobaApiWrapper(config["api"])
-        self.conn = psycopg2.connect(host=config["db"]["host"],
-                                     port=config["db"]["port"],
-                                     database=config["db"]["database"],
-                                     user=config["db"]["user"],
-                                     password=config["db"]["password"])
-        self.cursor = self.conn.cursor()
+        self.db = DataBaseWrapper(config["db"])
         self.stats = self.Stats()
-
-    def __del__(self):
-        self.cursor.close()
-        self.conn.close()
 
     def get_users(self):
         print("Started at " + datetime.now().strftime("%H:%M:%S"))
         for user_id in range(1, 250000):
             if self.stats.request_count % 100 == 0:
-                self.conn.commit()
+                self.db.commit()
                 print("{0}: {1} requests processed ({2} users, {3} errors)"
                       .format(datetime.now().strftime("%H:%M:%S"),
                               self.stats.request_count,
@@ -48,7 +37,7 @@ class GetUsers:
 
             self.__get_user(user_id)
 
-        self.conn.commit()
+        self.db.commit()
 
     def __get_user(self, user_id):
         response = self.api.execute("user/" + str(user_id))
@@ -67,7 +56,7 @@ class GetUsers:
         print(str(response.status_code) + ": " + str(response_json))
 
         if "error" in response_json:
-            self.cursor.execute(
+            self.db.execute_insert(
                 """
                     insert into user_errors (user_id, status_code, response)
                         values (%s, %s, %s);
@@ -77,7 +66,7 @@ class GetUsers:
             self.stats.error_count += 1
 
         else:
-            self.cursor.execute(
+            self.db.execute_insert(
                 """
                     insert into users (id, json)
                         values (%s, %s)
