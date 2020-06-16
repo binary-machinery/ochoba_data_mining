@@ -6,6 +6,8 @@ from datetime import datetime
 import psycopg2
 import requests
 
+from ochoba_api_wrapper import OchobaApiWrapper
+
 
 class GetUsers:
     class Stats:
@@ -20,8 +22,7 @@ class GetUsers:
         with open(str(script_path) + "/config.json") as json_file:
             config = json.load(json_file)
 
-        self.api_user_url = config["api"]["url"] + "user/"
-        self.api_headers = {"X-Device-Token": config["api"]["token"]}
+        self.api = OchobaApiWrapper(config["api"])
         self.conn = psycopg2.connect(host=config["db"]["host"],
                                      port=config["db"]["port"],
                                      database=config["db"]["database"],
@@ -50,7 +51,7 @@ class GetUsers:
         self.conn.commit()
 
     def __get_user(self, user_id):
-        response = requests.get(self.api_user_url + str(user_id), headers=self.api_headers)
+        response = self.api.execute("user/" + str(user_id))
         if response.status_code == 429:
             # Too Many Requests
             print(datetime.now().strftime("%H:%M:%S")
