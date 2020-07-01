@@ -25,9 +25,7 @@ create table user_errors (
 
 create table posts (
     id int primary key,
-    json varchar not null,
-    text_length int not null default 0,
-    media_count int not null default 0
+    json varchar not null
 );
 
 create table post_errors (

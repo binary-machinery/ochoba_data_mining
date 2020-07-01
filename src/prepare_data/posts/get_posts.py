@@ -1,7 +1,5 @@
 import json
-import re
 import time
-import urllib.parse
 from datetime import datetime
 
 from src.common.config_loader import ConfigLoader
@@ -21,12 +19,11 @@ class GetPosts:
         config = ConfigLoader.load()
         self.api = OchobaApiWrapper(config["api"])
         self.db = DataBaseWrapper(config["db"])
-        self.tag_regex = re.compile(config["api"]["tag_regex"])
         self.stats = self.Stats()
 
     def get_posts(self):
         print("Started at " + datetime.now().strftime("%H:%M:%S"))
-        for post_id in range(1, 154000):
+        for post_id in range(1, 164000):
             if self.stats.request_count % 100 == 0:
                 self.db.commit()
                 print("{0}: {1} requests processed ({2} posts, {3} errors)"
@@ -66,39 +63,14 @@ class GetPosts:
             self.stats.error_count += 1
 
         else:
-            result = response_json["result"]
-            if "entryContent" in result:
-                search_index = 0
-                parsed_tags = []
-                while True:
-                    match = self.tag_regex.search(result["entryContent"]["html"], search_index)
-                    if match is None:
-                        break
-
-                    parsed_tags.append(urllib.parse.unquote(match.group(1)))
-                    search_index = match.end(1)
-
-                result["parsed_tags"] = parsed_tags
-                del result["entryContent"]
-
-            text_length = 0
-            media_count = 0
-            if "blocks" in result:
-                for block in result["blocks"]:
-                    if block["type"] in ["media", "video"]:
-                        media_count += 1
-                    elif block["type"] in ["text", "header", "incut", "quote"]:
-                        text_length += len(block["data"]["text"])
-                del result["blocks"]
-
             self.db.execute_insert(
                 """
-                    insert into posts (id, json, text_length, media_count)
-                        values (%s, %s, %s, %s)
+                    insert into posts (id, json)
+                        values (%s, %s)
                     on conflict (id)
                         do update set json = excluded.json;
                 """,
-                (post_id, json.dumps(response_json), text_length, media_count)
+                (post_id, json.dumps(response_json))
             )
             self.stats.post_count += 1
 
