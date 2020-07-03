@@ -9,19 +9,20 @@ class SqlPlot:
         config = ConfigLoader.load()
         self.db = DataBaseWrapper(config["db"])
 
-    def show(self, sql_query, title, x_label, y_label):
-        data = self.db.execute_select(sql_query, None)
-        x = []
-        y = []
-        for row in data:
-            x.append(row[0])
-            y.append(row[1])
+    def show(self, sql_querys, title, x_label, y_label):
+        for sql_query in sql_querys:
+            data = self.db.execute_select(sql_query.get('query'), None)
+            x = []
+            y = []
+            for row in data:
+                x.append(row[0])
+                y.append(row[1])
 
-        plot.plot(x, y)
+            plot.plot(x, y, label=sql_query.get('label'))
 
         plot.title(title)
         plot.xlabel(x_label)
         plot.ylabel(y_label)
         plot.grid(True)
-
+        plot.legend()
         plot.show()
