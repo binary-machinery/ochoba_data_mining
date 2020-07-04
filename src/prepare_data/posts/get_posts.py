@@ -3,6 +3,7 @@ import re
 import time
 import urllib.parse
 from datetime import datetime
+from dataclasses import dataclass
 
 from src.common.config_loader import ConfigLoader
 from src.common.data_base_wrapper import DataBaseWrapper
@@ -10,12 +11,12 @@ from src.common.ochoba_api_wrapper import OchobaApiWrapper
 
 
 class GetPosts:
-    class Stats:
-        def __init__(self):
-            self.request_count = 0
-            self.post_count = 0
-            self.error_count = 0
-            self.requests_since_last_429 = 0
+    @dataclass
+    class Stats():
+        request_count: int = 0
+        post_count: int = 0
+        error_count: int = 0
+        requests_since_last_429: int = 0
 
     def __init__(self):
         config = ConfigLoader.load()
