@@ -23,18 +23,24 @@ class GetPosts:
 
     def get_posts(self):
         print("Started at " + datetime.now().strftime("%H:%M:%S"))
-        for post_id in range(1, 164000):
-            if self.stats.request_count % 100 == 0:
-                self.db.commit()
-                print("{0}: {1} requests processed ({2} posts, {3} errors)"
-                      .format(datetime.now().strftime("%H:%M:%S"),
-                              self.stats.request_count,
-                              self.stats.post_count,
-                              self.stats.error_count))
+        try:
+            for post_id in range(1, 165000):
+                if self.stats.request_count % 100 == 0:
+                    self.db.commit()
+                    print("{0}: {1} requests processed ({2} posts, {3} errors)"
+                          .format(datetime.now().strftime("%H:%M:%S"),
+                                  self.stats.request_count,
+                                  self.stats.post_count,
+                                  self.stats.error_count))
 
-            self.__get_post(post_id)
+                self.__get_post(post_id)
 
-        self.db.commit()
+        except Exception:
+            print("Exception!")
+            raise
+
+        finally:
+            self.db.commit()
 
     def __get_post(self, post_id):
         response = self.api.execute("entry/" + str(post_id))
