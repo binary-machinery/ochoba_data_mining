@@ -1,5 +1,6 @@
 from requests_toolbelt import sessions
 
+
 class OchobaApiWrapper:
     def __init__(self, config):
         self.url = config["url"]

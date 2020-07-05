@@ -10,7 +10,7 @@ from src.common.ochoba_api_wrapper import OchobaApiWrapper
 
 class GetPosts:
     @dataclass
-    class Stats():
+    class Stats:
         request_count: int = 0
         post_count: int = 0
         error_count: int = 0
