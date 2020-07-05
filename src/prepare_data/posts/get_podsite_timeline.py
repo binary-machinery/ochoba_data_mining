@@ -6,8 +6,14 @@ from src.common.config_loader import ConfigLoader
 from src.common.data_base_wrapper import DataBaseWrapper
 from src.common.ochoba_api_wrapper import OchobaApiWrapper
 
+'''
+author: https://github.com/alekxeyuk
+source: https://github.com/binary-machinery/ochoba_data_mining/pull/1
+might be outdated
+'''
 
-class GetPosts:
+
+class GetSubsiteTimeline:
     @dataclass
     class Stats():
         request_count: int = 0
@@ -36,7 +42,6 @@ class GetPosts:
             parsed_timeline = self.__parse_timeline(timeline)
             self.__db_insert(parsed_timeline)
 
-
             if self.stats.request_count % 10 == 0:
                 self.db.commit()
                 print(f'{self.__time()}: {self.stats.request_count} requests processed ({self.stats.post_count} posts, {self.stats.error_count} errors)')
@@ -60,7 +65,6 @@ class GetPosts:
 
         self.stats.request_count += 1
         self.stats.requests_since_last_429 += 1
-
 
     def __parse_timeline(self, timeline: list) -> list:
         parsed = [dict(
@@ -91,4 +95,4 @@ class GetPosts:
 
 
 if __name__ == "__main__":
-    GetPosts().get_posts()
+    GetSubsiteTimeline().get_posts()
