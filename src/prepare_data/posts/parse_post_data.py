@@ -20,7 +20,7 @@ class ParsePostData:
                 break
 
             parsed_tag = urllib.parse.unquote(match.group(0))
-            if len(parsed_tag) >= 3 and not parsed_tag.isdigit():
+            if len(parsed_tag) >= 3 and not parsed_tag[1:].isdigit():
                 self.db.execute_insert(
                     """
                         insert into post_tags (post_id, value, source)
