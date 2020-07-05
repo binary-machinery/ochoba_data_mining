@@ -29,17 +29,25 @@ create table posts (
 );
 
 alter table posts
-    add column entry_id int,
-    add column commentsCount int,
-    add column favoritesCount int,
-    add column hitsCount int,
-    add column likesCount int,
+    add column created timestamp,
+    add column type int,
     add column subsite_id int,
+    add column subsite_name varchar,
+    add column author_id int,
+    add column author_name varchar,
+    add column title varchar,
+    add column is_enabled_comments bool,
+    add column is_enabled_likes bool,
+    add column is_repost bool,
     add column is_show_thanks bool,
     add column is_filled_by_editors bool,
-    add column iseditorial bool,
-    add column date_created timestamp;
-
+    add column is_editorial bool,
+    add column hotness int,
+    add column comments_count int,
+    add column favorites_count int,
+    add column hits_count int,
+    add column likes_count int,
+    add column likes_sum int;
 
 create table post_errors (
     id serial primary key,
@@ -47,3 +55,18 @@ create table post_errors (
     status_code int not null,
     response varchar not null
 );
+
+create table post_tags (
+    id serial primary key,
+    post_id int,
+    value varchar,
+    source varchar
+);
+
+create table post_blocks (
+    id serial primary key,
+    post_id int,
+    type varchar,
+    data varchar,
+    text_length int
+)

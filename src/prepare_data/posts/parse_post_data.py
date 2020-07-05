@@ -12,70 +12,120 @@ class ParsePostData:
         self.db = DataBaseWrapper(config["db"])
         self.tag_regex = re.compile(config["api"]["tag_regex"])
 
+    def __parse_tags(self, post_id, text):
+        search_index = 0
+        while True:
+            match = self.tag_regex.search(text, search_index)
+            if match is None:
+                break
+
+            parsed_tag = urllib.parse.unquote(match.group(0))
+            if len(parsed_tag) >= 3 and not parsed_tag.isdigit():
+                self.db.execute_insert(
+                    """
+                        insert into post_tags (post_id, value, source)
+                            values (%s, %s, %s)
+                    """,
+                    (post_id, parsed_tag.lower(), text)
+                )
+            search_index = match.end(0)
+
     def parse(self):
+        offset_base = 0
         page_size = 500
         page = 0
         while True:
-            print("Fetch page #{0} ({1})".format(page, page_size * page))
+            offset = offset_base + page_size * page
+            print(f"Fetch page #{page} ({offset})")
             result = self.db.execute_select(
                 """
-                    select json from posts
+                    select id, json from posts
                         order by id
                         limit %s offset %s
                 """,
-                (page_size, page_size * page)
+                (page_size, offset)
             )
             if len(result) == 0:
                 break
 
             for row in result:
-                post_data = json.loads(row[0])["result"]
+                post_id = row[0]
+                try:
+                    post_data = json.loads(row[1])["result"]
+                    if "blocks" in post_data:
+                        blocks = post_data["blocks"]
+                        for block in blocks:
+                            block_type = block["type"]
+                            block_data = block["data"]
+                            text_length = 0
+                            if "text" in block_data:
+                                text_length = len(block_data["text"])
+                                self.__parse_tags(post_id, block_data["text"])
+                            if block_type == "list":
+                                for item in block_data["items"]:
+                                    text_length += len(item)
+                                    self.__parse_tags(post_id, item)
 
-                if "entryContent" in post_data:
-                    search_index = 0
-                    parsed_tags = []
-                    while True:
-                        match = self.tag_regex.search(post_data["entryContent"]["html"], search_index)
-                        if match is None:
-                            break
+                            self.db.execute_insert(
+                                """
+                                    insert into post_blocks (post_id, type, data, text_length)
+                                        values (%s, %s, %s, %s)
+                                """,
+                                (post_id, block_type, json.dumps(block_data), text_length)
+                            )
 
-                        parsed_tags.append(urllib.parse.unquote(match.group(1)))
-                        search_index = match.end(1)
+                    self.db.execute_update(
+                        """
+                            update posts
+                                set
+                                    created = to_timestamp(%s),
+                                    type = %s,
+                                    subsite_id = %s,
+                                    subsite_name = %s,
+                                    author_id = %s,
+                                    author_name = %s,
+                                    title = %s,
+                                    is_enabled_comments = %s,
+                                    is_enabled_likes = %s,
+                                    is_repost = %s,
+                                    is_show_thanks = %s,
+                                    is_filled_by_editors = %s,
+                                    is_editorial = %s,
+                                    hotness = %s,
+                                    comments_count = %s,
+                                    favorites_count = %s,
+                                    hits_count = %s,
+                                    likes_count = %s,
+                                    likes_sum = %s
+                                where id = %s
+                        """,
+                        (
+                            post_data["date"],
+                            post_data["type"],
+                            post_data["subsite"]["id"],
+                            post_data["subsite"]["name"],
+                            post_data["author"]["id"],
+                            post_data["author"]["name"],
+                            post_data["title"],
+                            post_data["isEnabledComments"],
+                            post_data["isEnabledLikes"],
+                            post_data["isRepost"],
+                            post_data.get("is_show_thanks"),
+                            post_data.get("is_filled_by_editors"),
+                            post_data.get("isEditorial"),
+                            post_data.get("hotness"),
+                            post_data["commentsCount"],
+                            post_data["favoritesCount"],
+                            post_data["hitsCount"],
+                            post_data["likes"]["count"],
+                            post_data["likes"]["summ"],
+                            post_id
+                        )
+                    )
 
-                    post_data["parsed_tags"] = parsed_tags
-
-                text_length = 0
-                media_count = 0
-                if "blocks" in post_data:
-                    for block in post_data["blocks"]:
-                        if block["type"] in ["media", "video"]:
-                            media_count += 1
-                        elif block["type"] in ["text", "header", "incut", "quote"]:
-                            text_length += len(block["data"]["text"])
-
-                # self.db.execute_update(
-                #     """
-                #         update posts
-                #             set
-                #                 created = to_timestamp(%s),
-                #                 name = %s,
-                #                 type = %s,
-                #                 karma = %s,
-                #                 is_plus = %s,
-                #                 is_verified = %s,
-                #                 is_available_for_messenger = %s,
-                #                 entries_count = %s,
-                #                 comments_count = %s,
-                #                 favorites_count = %s,
-                #                 subscribers_count = %s
-                #             where id = %s
-                #     """,
-                #     (post_data["created"], post_data["name"], post_data["type"], post_data["karma"],
-                #      post_data["is_plus"], post_data["is_verified"], post_data["isAvailableForMessenger"],
-                #      post_data["counters"]["entries"], post_data["counters"]["comments"],
-                #      post_data["counters"]["favorites"], post_data["subscribers_count"],
-                #      post_data["id"])
-                # )
+                except Exception:
+                    print(f"Exception for post #{post_id}")
+                    raise
 
             page += 1
             self.db.commit()

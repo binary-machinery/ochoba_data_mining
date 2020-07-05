@@ -1,7 +1,7 @@
 {
   "api": {
     "url": "https://api.dtf.ru/v1.8/",
-    "tag_regex": "dtf\\.ru.+?tag.*?\\/(.+?)\\\\?\">",
+    "tag_regex": "#\b.+?\b",
     "token": "your_token"
   },
   "db": {
