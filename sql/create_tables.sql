@@ -33,6 +33,7 @@ alter table posts
     add column type int,
     add column subsite_id int,
     add column subsite_name varchar,
+    add column subsite_type int,
     add column author_id int,
     add column author_name varchar,
     add column title varchar,

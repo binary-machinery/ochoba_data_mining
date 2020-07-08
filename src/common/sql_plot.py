@@ -10,6 +10,7 @@ class SqlPlot:
         self.db = DataBaseWrapper(config["db"])
 
     def show(self, sql_querys, title, x_label, y_label):
+        show_legend = False
         for sql_query in sql_querys:
             data = self.db.execute_select(sql_query.get('query'), None)
             x = []
@@ -18,11 +19,16 @@ class SqlPlot:
                 x.append(row[0])
                 y.append(row[1])
 
-            plot.plot(x, y, label=sql_query.get('label'))
+            label = sql_query.get('label')
+            plot.plot(x, y, label=label)
+            show_legend |= label is not None
 
         plot.title(title)
         plot.xlabel(x_label)
         plot.ylabel(y_label)
         plot.grid(True)
-        plot.legend()
+
+        if show_legend:
+            plot.legend()
+
         plot.show()
