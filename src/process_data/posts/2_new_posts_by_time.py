@@ -4,19 +4,24 @@ SqlPlot().show(
     sql_querys=[
         {
             'query': """
-                select date_trunc('week', date_created) as time_window, count(*)
-                from posts WHERE subsite_id = 64953 AND iseditorial = TRUE AND is_show_thanks = FALSE AND is_filled_by_editors = FALSE
-                group by time_window ORDER BY time_window 
-            """, 'label': 'games'},
+                select date_trunc('week', created) as time_window, count(*)
+                from posts
+                where type = 1
+                group by time_window
+                order by time_window
+            """, 'label': 'С мемами'
+        },
         {
             'query': """
-                select date_trunc('week', date_created) as time_window, count(*)
-                from posts WHERE subsite_id = 87855 AND iseditorial = TRUE AND is_show_thanks = FALSE AND is_filled_by_editors = FALSE
-                group by time_window ORDER BY time_window 
-            """, 'label': 'gameindustry'
+                select date_trunc('week', created) as time_window, count(*)
+                from posts
+                where type = 1 and subsite_id != 64966
+                group by time_window
+                order by time_window
+            """, 'label': 'Без мемов'
         }
     ],
-    title="Количество новых постов за неделю",
+    title="Количество новых постов за неделю (без репостов и вакансий)",
     x_label="Время",
     y_label="Новые посты за неделю"
 )
