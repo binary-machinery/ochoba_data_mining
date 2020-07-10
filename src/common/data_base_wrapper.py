@@ -24,6 +24,10 @@ class DataBaseWrapper:
         self.cursor.execute(query, values)
         return self.cursor.fetchall()
 
+    def execute_select_one(self, query, values):
+        self.cursor.execute(query, values)
+        return self.cursor.fetchone()
+
     def execute_update(self, query, values):
         self.cursor.execute(query, values)
 

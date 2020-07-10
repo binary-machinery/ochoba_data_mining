@@ -70,4 +70,17 @@ create table post_blocks (
     type varchar,
     data varchar,
     text_length int
-)
+);
+
+create table subsites (
+    id int primary key,
+    json varchar,
+    has_restricted_access bool not null default false
+);
+
+create table subsite_errors (
+    id serial primary key,
+    subsite_id int not null,
+    status_code int not null,
+    response varchar not null
+);
