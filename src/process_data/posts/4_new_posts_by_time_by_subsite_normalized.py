@@ -12,18 +12,9 @@ fig = go.Figure()
 
 subsite_ids, subsite_names = db.fetch_data(
     """
-        with data as (
-            select id,
-                   created,
-                   case when subsite_type = 1 then 0 else subsite_id end         as subsite_id,
-                   case when subsite_type = 1 then 'Блоги' else subsite_name end as subsite_name,
-                   subsite_type
-            from posts
-            where type = 1
-        )
         select subsite_id, subsite_name
-        from data
-        where subsite_id != 0
+        from posts
+        where type = 1 and subsite_type = 2
         group by subsite_id, subsite_name
         order by count(id) desc
         limit 19
@@ -34,24 +25,21 @@ subsite_ids, subsite_names = db.fetch_data(
 for (subsite_id, subsite_name) in zip(subsite_ids, subsite_names):
     x, y = db.fetch_data(
         """
-            with time_windows as (
-                select date_trunc('week', created) as time_window
-                from posts
-                where created between '2018-06-06 00:00:00.000000' and '2020-06-22 00:00:00.000000'
-                group by time_window
+            with time_scale as (
+                select date_trunc('week', generate_series) as time_window
+                from generate_series('2018-06-06'::timestamp, '2020-06-22'::timestamp, '1 week'::interval)
                 order by time_window
             )
-            select time_windows.time_window, coalesce(data.count, 0) as count
-            from time_windows
+            select time_scale.time_window, coalesce(data.count, 0) as count
+            from time_scale
             left join (
                 select date_trunc('week', created) as time_window, count(*)
                 from posts
-                where type = 1
-                  and subsite_id = %s
+                where type = 1 and subsite_id = %s
                 group by time_window
                 order by time_window
                 ) as data
-                on time_windows.time_window = data.time_window
+                on time_scale.time_window = data.time_window
         """,
         (subsite_id,)
     )
@@ -66,15 +54,13 @@ for (subsite_id, subsite_name) in zip(subsite_ids, subsite_names):
 
 x, y = db.fetch_data(
     """
-        with time_windows as (
-            select date_trunc('week', created) as time_window
-            from posts
-            where created between '2018-06-08 00:00:00.000000' and '2020-06-22 00:00:00.000000'
-            group by time_window
+        with time_scale as (
+            select date_trunc('week', generate_series) as time_window
+            from generate_series('2018-06-06'::timestamp, '2020-06-22'::timestamp, '1 week'::interval)
             order by time_window
         )
-        select time_windows.time_window, coalesce(data.count, 0) as count
-        from time_windows
+        select time_scale.time_window, coalesce(data.count, 0) as count
+        from time_scale
         left join (
             select date_trunc('week', created) as time_window, count(*)
             from posts
@@ -82,7 +68,7 @@ x, y = db.fetch_data(
             group by time_window
             order by time_window
             ) as data
-            on time_windows.time_window = data.time_window
+            on time_scale.time_window = data.time_window
     """,
     None
 )
