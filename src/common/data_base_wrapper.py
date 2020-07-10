@@ -26,3 +26,13 @@ class DataBaseWrapper:
 
     def execute_update(self, query, values):
         self.cursor.execute(query, values)
+
+    def fetch_data(self, query, values):
+        self.cursor.execute(query, values)
+        data = self.cursor.fetchall()
+        x = []
+        y = []
+        for row in data:
+            x.append(row[0])
+            y.append(row[1])
+        return x, y
