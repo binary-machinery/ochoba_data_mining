@@ -57,6 +57,9 @@ create table post_errors (
     response varchar not null
 );
 
+alter table post_errors
+    add column estimated_creation_time timestamp;
+
 create table post_tags (
     id serial primary key,
     post_id int,

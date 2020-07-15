@@ -44,3 +44,15 @@ select author_id, author_name, count(*) as cnt from posts
 where type = 5
 group by author_id, author_name
 order by cnt desc;
+
+-- Calculate estimated time for failed post queries
+update post_errors
+    set estimated_creation_time = (
+        with data as (
+            (select * from posts where id > post_errors.post_id order by id asc limit 10)
+            union
+            (select * from posts where id < post_errors.post_id order by id desc limit 10)
+        )
+        select to_timestamp(avg(cast(extract(epoch from created) as integer))) as created
+        from data
+    );
