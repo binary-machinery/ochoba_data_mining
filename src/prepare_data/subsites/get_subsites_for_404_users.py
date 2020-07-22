@@ -60,8 +60,18 @@ class GetSubsites:
             self.__get_subsite(subsite_id)
             return
 
-        if response.status_code == 483:
-            print(str(subsite_id) + ": " + str(response.status_code) + ": " + str(response.json()))
+        print(str(subsite_id) + ": " + str(response.status_code) + ": " + str(response.json()))
+        if response.status_code == 200:
+            self.db.execute_insert(
+                """
+                    insert into subsites (id, json)
+                        values (%s, %s)
+                    on conflict (id)
+                        do update set json = excluded.json;
+                """,
+                (subsite_id, json.dumps(response.json()["result"]))
+            )
+            self.db.commit()
 
 
 if __name__ == "__main__":

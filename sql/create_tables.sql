@@ -81,6 +81,15 @@ create table subsites (
     has_restricted_access bool not null default false
 );
 
+alter table subsites
+    add column created timestamp,
+    add column name varchar,
+    add column type int,
+    add column description varchar,
+    add column is_verified bool,
+    add column is_enable_writing bool,
+    add column subscriber_count int;
+
 create table subsite_errors (
     id serial primary key,
     subsite_id int not null,
