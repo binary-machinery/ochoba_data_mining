@@ -1,7 +1,7 @@
 from src.common.sql_plot import SqlPlot
 
 SqlPlot().show(
-    sql_querys=[
+    sql_queries=[
         {
             'query': """
                 select date_trunc('week', created) as time_window, count(*)

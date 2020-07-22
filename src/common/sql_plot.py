@@ -9,9 +9,9 @@ class SqlPlot:
         config = ConfigLoader.load()
         self.db = DataBaseWrapper(config["db"])
 
-    def show(self, sql_querys, title, x_label, y_label):
+    def show(self, sql_queries, title, x_label, y_label):
         show_legend = False
-        for sql_query in sql_querys:
+        for sql_query in sql_queries:
             data = self.db.execute_select(sql_query.get('query'), None)
             x = []
             y = []
