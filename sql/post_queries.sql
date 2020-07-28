@@ -19,9 +19,11 @@ with data as (
     from posts
     where type = 1
 )
-select subsite_name, count(id) as cnt
+select subsite_id, subsite_name, subsites.created, count(data.id) as cnt
 from data
-group by subsite_id, subsite_name
+left join subsites
+    on data.subsite_id = subsites.id
+group by subsite_id, subsite_name, subsites.created
 order by cnt desc;
 
 -- Biggest subsites in June 2020

@@ -1,12 +1,12 @@
 from src.common.sql_plot import SqlPlot
 
 SqlPlot().show(
-    sql_querys=[
+    sql_queries=[
         {
             'query': """
                 select date_trunc('week', created) as time_window, count(*)
                 from posts
-                where type = 1
+                where type = 1 and created < '2020-07-20'
                 group by time_window
                 order by time_window
             """, 'label': 'С мемами'
@@ -15,7 +15,7 @@ SqlPlot().show(
             'query': """
                 select date_trunc('week', created) as time_window, count(*)
                 from posts
-                where type = 1 and subsite_id != 64966
+                where type = 1 and subsite_id != 64966 and created < '2020-07-20'
                 group by time_window
                 order by time_window
             """, 'label': 'Без мемов'
