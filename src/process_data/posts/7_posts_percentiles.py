@@ -9,7 +9,7 @@ SqlPlot().show(
                            posts.id as post_id,
                            sum(coalesce(blocks.text_length, 0)) as text_length
                     from posts
-                    left join post_blocks blocks
+                    join post_blocks blocks
                         on posts.id = blocks.post_id
                             and posts.type = 1
                     group by posts.id

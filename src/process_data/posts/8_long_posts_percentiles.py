@@ -22,7 +22,6 @@ SqlPlot().show(
                     percentile_disc(percentiles.value) within group (order by text_length) as percentile,
                     percentiles.value * 100 as probability
                 from percentiles cross join length_data
-                where text_length < 341961
                 group by percentiles.value
             """
         }
