@@ -149,7 +149,24 @@ select subsite_id, subsite_name, sum(comments_count) as comments from data
 group by subsite_id, subsite_name
 order by comments desc;
 
--- Percentiles
+-- Sort by text length
+with length_data as (
+    select
+           posts.id as post_id,
+           sum(coalesce(blocks.text_length, 0)) as text_length
+    from posts
+    left join post_blocks blocks
+        on posts.id = blocks.post_id
+            and posts.type = 1
+    group by posts.id
+)
+select posts.id, posts.title, posts.author_name, posts.subsite_name, text_length
+from length_data
+left join posts
+    on posts.id = length_data.post_id
+order by text_length desc;
+
+-- Text length percentiles
 with length_data as (
     select
            posts.id as post_id,
@@ -161,20 +178,22 @@ with length_data as (
     group by posts.id
 ), percentiles as (
     select generate_series as value
-    from generate_series(0, 1, 0.05)
+    from generate_series(0, 1, 0.01)
 )
-select percentiles.value, percentile_disc(percentiles.value) within group (order by text_length)
+select percentiles.value * 100 as probability,
+       percentile_disc(percentiles.value) within group (order by text_length) as percentile
 from percentiles cross join length_data
+where text_length < 341961
 group by percentiles.value;
 
--- Long posts percentiles
+-- Text length percentiles for long posts
 with length_data as (
     select posts.id, sum(blocks.text_length) as text_length
     from posts
     join post_tags tags
         on posts.id = tags.post_id
             and posts.type = 1
-            and (value = '#лонг' or value = '#лонгрид')
+            and (tags.value = '#лонг' or tags.value = '#лонгрид')
     join post_blocks blocks
         on posts.id = blocks.post_id
     group by posts.id
@@ -182,6 +201,40 @@ with length_data as (
     select generate_series as value
     from generate_series(0, 1, 0.05)
 )
-select percentiles.value, percentile_disc(percentiles.value) within group (order by text_length)
+select percentiles.value * 100 as probability,
+       percentile_disc(percentiles.value) within group (order by text_length) as percentile
 from percentiles cross join length_data
+where text_length < 341961
 group by percentiles.value;
+
+-- Sort subsites by amount of long posts
+select subsite_id, subsite_name, count(distinct posts.id) as cnt
+from posts
+join post_tags tags
+    on posts.id = tags.post_id
+        and posts.type = 1
+        and (tags.value = '#лонг' or tags.value = '#лонгрид')
+group by subsite_id, subsite_name
+order by cnt desc;
+
+-- Sort subsites by amount of editorial long posts
+select subsite_id, subsite_name, count(distinct posts.id) as cnt
+from posts
+join post_tags tags
+    on posts.id = tags.post_id
+        and posts.type = 1
+        and posts.is_editorial = true
+        and (tags.value = '#лонг' or tags.value = '#лонгрид')
+group by subsite_id, subsite_name
+order by cnt desc;
+
+-- Sort subsites by amount of UGC long posts
+select subsite_id, subsite_name, count(distinct posts.id) as cnt
+from posts
+join post_tags tags
+    on posts.id = tags.post_id
+        and posts.type = 1
+        and posts.is_editorial = false
+        and (tags.value = '#лонг' or tags.value = '#лонгрид')
+group by subsite_id, subsite_name
+order by cnt desc;
