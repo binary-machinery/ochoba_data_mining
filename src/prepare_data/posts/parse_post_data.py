@@ -74,6 +74,12 @@ class ParsePostData:
                                 (post_id, block_type, json.dumps(block_data), text_length)
                             )
 
+                    co_author_id = None
+                    co_author_name = None
+                    if "co_author" in post_data:
+                        co_author_id = post_data["co_author"]["id"]
+                        co_author_name = post_data["co_author"]["name"]
+
                     self.db.execute_update(
                         """
                             update posts
@@ -85,6 +91,8 @@ class ParsePostData:
                                     subsite_type = %s,
                                     author_id = %s,
                                     author_name = %s,
+                                    co_author_id = %s,
+                                    co_author_name = %s,
                                     title = %s,
                                     is_enabled_comments = %s,
                                     is_enabled_likes = %s,
@@ -108,6 +116,8 @@ class ParsePostData:
                             post_data["subsite"]["type"],
                             post_data["author"]["id"],
                             post_data["author"]["name"],
+                            co_author_id,
+                            co_author_name,
                             post_data["title"],
                             post_data["isEnabledComments"],
                             post_data["isEnabledLikes"],
