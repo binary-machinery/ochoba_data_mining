@@ -19,19 +19,10 @@ with data as (
     from posts
     where type = 1
 )
-select
-       stats.subsite_id as id,
-       coalesce(subsites.name, 'Блоги') as name,
-       subsites.created as created,
-       stats.cnt as cnt
-from (
-    select subsite_id, count(data.id) as cnt
-    from data
-    group by subsite_id
-    ) as stats
-left join subsites
-    on stats.subsite_id = subsites.id
-order by stats.cnt desc;
+select subsite_id, subsite_name, count(id) as cnt
+from data
+group by subsite_id, subsite_name
+order by cnt desc;
 
 -- Biggest subsites in June 2020
 with data as (
@@ -172,7 +163,7 @@ with length_data as (
            posts.id as post_id,
            sum(coalesce(blocks.text_length, 0)) as text_length
     from posts
-    left join post_blocks blocks
+    join post_blocks blocks
         on posts.id = blocks.post_id
             and posts.type = 1
     group by posts.id
@@ -238,3 +229,63 @@ join post_tags tags
         and (tags.value = '#лонг' or tags.value = '#лонгрид')
 group by subsite_id, subsite_name
 order by cnt desc;
+
+-- Sort authors by amount of long posts
+select author_id, author_name, count(distinct posts.id) as cnt
+from posts
+join post_tags tags
+    on posts.id = tags.post_id
+        and posts.type = 1
+        and (tags.value = '#лонг' or tags.value = '#лонгрид')
+group by author_id, author_name
+order by cnt desc;
+
+-- Sort authors by sum text length of their long posts
+with length_data as (
+    select posts.id as post_id, sum(blocks.text_length) as text_length
+    from posts
+    join post_tags tags
+        on posts.id = tags.post_id
+            and posts.type = 1
+            and (tags.value = '#лонг' or tags.value = '#лонгрид')
+    join post_blocks blocks
+        on posts.id = blocks.post_id
+    group by posts.id
+)
+select author_id, author_name, sum(text_length) as text_length
+from length_data
+join posts
+    on posts.id = length_data.post_id
+group by author_id, author_name
+order by text_length desc;
+
+-- Sort authors by sum rating of their long posts
+with length_data as (
+    select posts.id as post_id, sum(posts.likes_sum) as total_rating
+    from posts
+    join post_tags tags
+        on posts.id = tags.post_id
+            and posts.type = 1
+            and (tags.value = '#лонг' or tags.value = '#лонгрид')
+    group by posts.id
+)
+select author_id, author_name, sum(total_rating) as total_rating
+from length_data
+join posts
+    on posts.id = length_data.post_id
+group by author_id, author_name
+order by total_rating desc;
+
+-- Sort by co-author posts
+select co_author_id, co_author_name, count(*) as co_author_cnt
+from posts
+where co_author_id is not null
+group by co_author_id, co_author_name
+order by co_author_cnt desc;
+
+-- Sort by filled by editors count
+select author_id, author_name, count(*) as filled_by_editors_cnt
+from posts
+where is_filled_by_editors
+group by author_id, author_name
+order by filled_by_editors_cnt desc;

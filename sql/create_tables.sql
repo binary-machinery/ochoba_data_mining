@@ -50,6 +50,10 @@ alter table posts
     add column likes_count int,
     add column likes_sum int;
 
+alter table posts
+    add column co_author_id int,
+    add column co_author_name varchar;
+
 create table post_errors (
     id serial primary key,
     post_id int not null,
