@@ -25,6 +25,7 @@ class SqlPlot:
 
         plot.title(title)
         plot.xlabel(x_label)
+        plot.xticks(rotation=45)
         plot.ylabel(y_label)
         plot.grid(True)
 

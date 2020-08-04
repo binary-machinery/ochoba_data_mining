@@ -336,3 +336,25 @@ select value, count(distinct id) as tag_count
 from post_tags
 group by value
 order by tag_count desc;
+
+-- Most popular tags per month
+with data as (
+    select date_trunc('month', created)::date as time_window, post_tags.value as tag, count(distinct posts.id) as cnt
+    from posts
+    join post_tags
+        on posts.id = post_tags.post_id
+            and posts.created > '2017-01-01'
+            and post_tags.value not in ('#long', '#лонг', '#новости', '#кино', '#фан', '#мнения', '#обзоры', '#разбор', '#опыт', '#игры', '#видео', '#сериалы', '#деньги', '#топы', '#истории', '#мобайл', '#киберспорт')
+    group by time_window, post_tags.value
+    order by time_window, cnt desc
+)
+select distinct time_window,
+    nth_value(tag, 1) over (partition by time_window order by cnt desc range between unbounded preceding and unbounded following) as _1,
+    nth_value(tag, 2) over (partition by time_window order by cnt desc range between unbounded preceding and unbounded following) as _2,
+    nth_value(tag, 3) over (partition by time_window order by cnt desc range between unbounded preceding and unbounded following) as _3,
+    nth_value(tag, 4) over (partition by time_window order by cnt desc range between unbounded preceding and unbounded following) as _4,
+    nth_value(tag, 5) over (partition by time_window order by cnt desc range between unbounded preceding and unbounded following) as _5,
+    nth_value(tag, 6) over (partition by time_window order by cnt desc range between unbounded preceding and unbounded following) as _6,
+    nth_value(tag, 7) over (partition by time_window order by cnt desc range between unbounded preceding and unbounded following) as _7
+from data
+order by time_window;
