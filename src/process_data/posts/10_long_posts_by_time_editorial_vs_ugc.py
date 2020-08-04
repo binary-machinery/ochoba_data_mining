@@ -9,9 +9,9 @@ SqlPlot().show(
                 join post_tags tags
                     on posts.id = tags.post_id
                         and posts.type = 1
-                        and posts.created between '2019-01-21' and '2020-07-20'
+                        and posts.created between '2019-02-01' and '2020-07-20'
                         and posts.is_editorial = true
-                        and (tags.value = '#лонг' or tags.value = '#лонгрид')
+                        and tags.value in ('#лонг', '#лонгрид', '#long', '#longread')
                 group by time_window
                 order by time_window
             """, 'label': "Лонги (редакция)"
@@ -23,9 +23,9 @@ SqlPlot().show(
                 join post_tags tags
                     on posts.id = tags.post_id
                         and posts.type = 1
-                        and posts.created between '2019-01-21' and '2020-07-20'
+                        and posts.created between '2019-02-01' and '2020-07-20'
                         and posts.is_editorial = false
-                        and (tags.value = '#лонг' or tags.value = '#лонгрид')
+                        and tags.value in ('#лонг', '#лонгрид', '#long', '#longread')
                 group by time_window
                 order by time_window
             """, 'label': "Лонги (UGC)"

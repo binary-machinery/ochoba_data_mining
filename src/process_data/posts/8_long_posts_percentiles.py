@@ -4,16 +4,19 @@ SqlPlot().show(
     sql_queries=[
         {
             'query': """
-                with length_data as (
-                    select posts.id, sum(blocks.text_length) as text_length
+                with long_posts as (
+                    select distinct posts.id
                     from posts
-                    join post_tags tags
-                        on posts.id = tags.post_id
+                    join post_tags
+                        on posts.id = post_tags.post_id
                             and posts.type = 1
-                            and (tags.value = '#лонг' or tags.value = '#лонгрид')
+                            and post_tags.value in ('#лонг', '#лонгрид', '#longread')
+                ), length_data as (
+                    select long_posts.id, sum(blocks.text_length) as text_length
+                    from long_posts
                     join post_blocks blocks
-                        on posts.id = blocks.post_id
-                    group by posts.id
+                        on long_posts.id = blocks.post_id
+                    group by long_posts.id
                 ), percentiles as (
                     select generate_series as value
                     from generate_series(0, 1, 0.01)

@@ -178,25 +178,37 @@ where text_length < 341961
 group by percentiles.value;
 
 -- Text length percentiles for long posts
-with length_data as (
-    select posts.id, sum(blocks.text_length) as text_length
+with long_posts as (
+    select distinct posts.id
     from posts
-    join post_tags tags
-        on posts.id = tags.post_id
+    join post_tags
+        on posts.id = post_tags.post_id
             and posts.type = 1
-            and (tags.value = '#лонг' or tags.value = '#лонгрид')
+            and post_tags.value in ('#лонг', '#лонгрид', '#longread')
+), length_data as (
+    select long_posts.id, sum(blocks.text_length) as text_length
+    from long_posts
     join post_blocks blocks
-        on posts.id = blocks.post_id
-    group by posts.id
+        on long_posts.id = blocks.post_id
+    group by long_posts.id
 ), percentiles as (
     select generate_series as value
     from generate_series(0, 1, 0.05)
 )
-select percentiles.value * 100 as probability,
-       percentile_disc(percentiles.value) within group (order by text_length) as percentile
+select
+    percentile_disc(percentiles.value) within group (order by text_length) as percentile,
+    percentiles.value * 100 as probability
 from percentiles cross join length_data
-where text_length < 341961
 group by percentiles.value;
+
+-- Long posts count
+select count(distinct post_id)
+from post_tags
+where value in ('#лонг', '#лонгрид', '#long', '#longread');
+
+select count(distinct post_id)
+from post_tags
+where value in ('#лонг', '#лонгрид', '#longread');
 
 -- Sort subsites by amount of long posts
 select subsite_id, subsite_name, count(distinct posts.id) as cnt
@@ -204,7 +216,7 @@ from posts
 join post_tags tags
     on posts.id = tags.post_id
         and posts.type = 1
-        and (tags.value = '#лонг' or tags.value = '#лонгрид')
+        and (tags.value in ('#лонг', '#лонгрид', '#long', '#longread'))
 group by subsite_id, subsite_name
 order by cnt desc;
 
@@ -276,6 +288,23 @@ join posts
 group by author_id, author_name
 order by total_rating desc;
 
+-- Sort authors by sum hits of their long posts
+with length_data as (
+    select posts.id as post_id, sum(posts.likes_sum) as total_rating
+    from posts
+    join post_tags tags
+        on posts.id = tags.post_id
+            and posts.type = 1
+            and (tags.value = '#лонг' or tags.value = '#лонгрид')
+    group by posts.id
+)
+select author_id, author_name, sum(hits_count) as hits_count
+from length_data
+join posts
+    on posts.id = length_data.post_id
+group by author_id, author_name
+order by hits_count desc;
+
 -- Sort by co-author posts
 select co_author_id, co_author_name, count(*) as co_author_cnt
 from posts
@@ -289,3 +318,21 @@ from posts
 where is_filled_by_editors
 group by author_id, author_name
 order by filled_by_editors_cnt desc;
+
+-- Delete duplicate tags
+delete from post_tags
+where id in (
+        select distinct pt1.id
+        from post_tags pt1
+        join post_tags pt2
+            on pt1.post_id = pt2.post_id
+                and pt1.value = pt2.value
+        where pt1.id > pt2.id
+        group by pt1.id
+    );
+
+-- Sort by tags count
+select value, count(distinct id) as tag_count
+from post_tags
+group by value
+order by tag_count desc;
