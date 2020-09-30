@@ -100,3 +100,14 @@ create table subsite_errors (
     status_code int not null,
     response varchar not null
 );
+
+create table post_history (
+    id serial primary key,
+    post_id int not null,
+    request_time timestamp,
+    json varchar,
+    hits int,
+    rating int,
+    comments int,
+    favorites int
+);
