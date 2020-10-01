@@ -1,6 +1,6 @@
 from src.common.sql_plot import SqlPlot
 
-post_id = 221596
+post_id = 220958
 
 SqlPlot().show(
     sql_queries=[

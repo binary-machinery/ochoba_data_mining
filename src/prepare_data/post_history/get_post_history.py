@@ -6,8 +6,8 @@ from src.common.config_loader import ConfigLoader
 from src.common.data_base_wrapper import DataBaseWrapper
 from src.common.ochoba_api_wrapper import OchobaApiWrapper
 
-post_id = 221596
-request_interval_minutes = 1
+post_id = 220958
+request_interval_minutes = 30
 
 config = ConfigLoader.load()
 api = OchobaApiWrapper(config["api"])
