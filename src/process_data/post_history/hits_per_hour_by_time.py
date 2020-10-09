@@ -15,8 +15,8 @@ SqlPlot().show(
                     order by hours
                 )
                 select request_time,
-                       (hits - coalesce(lag(hits, 1) over (order by hours), 0)) 
-                            / (extract(epoch from request_time - lag(request_time, 1) over (order by hours)) / 3600)
+                       coalesce((hits - coalesce(lag(hits, 1) over (order by hours), 0)) 
+                            / (extract(epoch from request_time - lag(request_time, 1) over (order by hours)) / 3600), 0)
                 from data
             """
         }
