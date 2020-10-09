@@ -8,13 +8,15 @@ SqlPlot().show(
             'query': f"""
                 with data as (
                     select date_trunc('hour', request_time) as hours,
+                           min(request_time)                as request_time,
                            min(hits)                        as hits
                     from post_history
                     group by hours
                     order by hours
                 )
-                select hours,
-                       hits - coalesce(lag(hits, 1) over (order by hours), 0) as hits_per_hour
+                select request_time,
+                       (hits - coalesce(lag(hits, 1) over (order by hours), 0)) 
+                            / (extract(epoch from request_time - lag(request_time, 1) over (order by hours)) / 3600)
                 from data
             """
         }
