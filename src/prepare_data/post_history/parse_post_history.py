@@ -14,6 +14,7 @@ while True:
     result = db.execute_select(
         """
             select id, json from post_history
+                where hits is null
                 order by id
                 limit %s offset %s
         """,
